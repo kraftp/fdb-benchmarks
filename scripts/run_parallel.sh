@@ -36,7 +36,7 @@ if [ -z "${DURATION}" ] || [ -z "${INTERVAL}" ] || [ -z "${READ_PERCENTAGE}" ] |
 fi
 
 # Define the command you want to run
-cmd=(java -jar target/fdb-benchmarks-1.0-SNAPSHOT-jar-with-dependencies.jar -b fdb -d $1 -i $2 -r $3 -o $4)
+cmd=(java -jar target/fdb-benchmarks-1.0-SNAPSHOT-jar-with-dependencies.jar -b fdb -d DURATION -i INTERVAL -r READ_PERCENTAGE -o OPS)
 
 # Run the command multiple times in separate processes and concatenate outputs
 for i in $(seq "${NUM_CLIENTS}"); do
