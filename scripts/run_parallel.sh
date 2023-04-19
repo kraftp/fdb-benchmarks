@@ -7,7 +7,7 @@ if [ "$#" -ne 5 ]; then
 fi
 
 # Define the command you want to run
-cmd="java -jar target/fdb-benchmarks-1.0-SNAPSHOT-jar-with-dependencies.jar -b fdb -d $1 -i $2 -r $3 -o $4"
+cmd=(java -jar target/fdb-benchmarks-1.0-SNAPSHOT-jar-with-dependencies.jar -b fdb -d $1 -i $2 -r $3 -o $4)
 
 # Number of parallel clients
 num_clients=$5
@@ -20,7 +20,7 @@ rm -f "${output_file}"
 
 # Run the command multiple times in separate processes and concatenate outputs
 for i in $(seq "${num_clients}"); do
-  ( "${cmd}" >> "${output_file}" ) &
+  ( "${cmd[@]}" >> "${output_file}" ) &
 done
 
 # Wait for all processes to complete before exiting the script
