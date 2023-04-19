@@ -53,5 +53,5 @@ Both VoltDB and FoundationDB clients are backed by a single network thread, so w
 To run many FDB clients in parallel, use:
 
 ```shell
-    scripts/run_parallel.sh -d DURATION -i INTERVAL -r READ_PERCENTAGE -o OPS -n NUM_CLIENTS
+scripts/run_parallel.sh -d DURATION -i INTERVAL -r READ_PERCENTAGE -o OPS -n NUM_CLIENTS
 ```
