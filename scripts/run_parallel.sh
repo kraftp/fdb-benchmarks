@@ -2,7 +2,7 @@
 
 # Define usage function
 usage() {
-  echo "Usage: $0 -d DURATION -i INTERVAL -r READ_PERCENTAGE -o OPS -n NUM_RUNS"
+  echo "Usage: $0 -d DURATION -i INTERVAL -r READ_PERCENTAGE -o OPS -n NUM_CLIENTS"
   exit 1
 }
 
@@ -22,7 +22,7 @@ while getopts "d:i:r:o:n:" opt; do
       OPS="$OPTARG"
       ;;
     n)
-      NUM_RUNS="$OPTARG"
+      NUM_CLIENTS="$OPTARG"
       ;;
     *)
       usage
@@ -38,11 +38,8 @@ fi
 # Define the command you want to run
 cmd=(java -jar target/fdb-benchmarks-1.0-SNAPSHOT-jar-with-dependencies.jar -b fdb -d $1 -i $2 -r $3 -o $4)
 
-# Number of parallel clients
-num_clients=$5
-
 # Run the command multiple times in separate processes and concatenate outputs
-for i in $(seq "${num_clients}"); do
+for i in $(seq "${NUM_CLIENTS}"); do
   ( "${cmd[@]}" ) &
 done
 
