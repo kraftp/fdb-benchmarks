@@ -31,7 +31,7 @@ while getopts "d:i:r:o:n:" opt; do
 done
 
 # Verify that all required options are provided
-if [ -z "${DURATION}" ] || [ -z "${INTERVAL}" ] || [ -z "${READ_PERCENTAGE}" ] || [ -z "${OPS}" ] || [ -z "${NUM_RUNS}" ]; then
+if [ -z "${DURATION}" ] || [ -z "${INTERVAL}" ] || [ -z "${READ_PERCENTAGE}" ] || [ -z "${OPS}" ] || [ -z "${NUM_CLIENTS}" ]; then
   usage
 fi
 
