@@ -1,9 +1,38 @@
 #!/bin/bash
 
-# Check if the required number of arguments is provided
-if [ "$#" -ne 5 ]; then
-  echo "Usage: $0 DURATION INTERVAL READ_PERCENTAGE OPS NUM_CLIENTS"
+# Define usage function
+usage() {
+  echo "Usage: $0 -d DURATION -i INTERVAL -r READ_PERCENTAGE -o OPS -n NUM_RUNS"
   exit 1
+}
+
+# Process command-line options using getopts
+while getopts "d:i:r:o:n:" opt; do
+  case $opt in
+    d)
+      DURATION="$OPTARG"
+      ;;
+    i)
+      INTERVAL="$OPTARG"
+      ;;
+    r)
+      READ_PERCENTAGE="$OPTARG"
+      ;;
+    o)
+      OPS="$OPTARG"
+      ;;
+    n)
+      NUM_RUNS="$OPTARG"
+      ;;
+    *)
+      usage
+      ;;
+  esac
+done
+
+# Verify that all required options are provided
+if [ -z "${DURATION}" ] || [ -z "${INTERVAL}" ] || [ -z "${READ_PERCENTAGE}" ] || [ -z "${OPS}" ] || [ -z "${NUM_RUNS}" ]; then
+  usage
 fi
 
 # Define the command you want to run
