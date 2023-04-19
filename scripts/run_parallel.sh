@@ -12,15 +12,9 @@ cmd=(java -jar target/fdb-benchmarks-1.0-SNAPSHOT-jar-with-dependencies.jar -b f
 # Number of parallel clients
 num_clients=$5
 
-# Output file where the results will be concatenated
-output_file="output.txt"
-
-# Remove the output file if it already exists to start fresh
-rm -f "${output_file}"
-
 # Run the command multiple times in separate processes and concatenate outputs
 for i in $(seq "${num_clients}"); do
-  ( "${cmd[@]}" >> "${output_file}" ) &
+  ( "${cmd[@]}" ) &
 done
 
 # Wait for all processes to complete before exiting the script

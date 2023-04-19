@@ -221,6 +221,5 @@ public class FDBBenchmark {
         }
         threadPool.shutdown();
         threadPool.awaitTermination(100000, TimeUnit.SECONDS);
-        System.out.printf("All queries finished! %d\n", System.currentTimeMillis() - startTime);
     }
 }
