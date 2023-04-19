@@ -50,3 +50,8 @@ OPS is the number of operations (single-key reads or writes) to do per transacti
 
 Both VoltDB and FoundationDB clients are backed by a single network thread, so we found that fully saturating a single-core VoltDB or FDB database requires many (we used 8) concurrent client processes.
 
+To run many FDB clients in parallel, use:
+
+```shell
+scripts/run_parallel.sh -d DURATION -i INTERVAL -r READ_PERCENTAGE -o OPS -n NUM_CLIENTS
+```

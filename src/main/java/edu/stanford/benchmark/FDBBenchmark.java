@@ -149,7 +149,6 @@ public class FDBBenchmark {
 
         threadPool.shutdown();
         threadPool.awaitTermination(100000, TimeUnit.SECONDS);
-        System.out.printf("All queries finished! %d\n", System.currentTimeMillis() - startTime);
     }
 
     public static void benchmarkVolt(long interval, long duration, int numOps, String connection, int readPercentage) throws InterruptedException, IOException, ProcCallException {
@@ -221,6 +220,5 @@ public class FDBBenchmark {
         }
         threadPool.shutdown();
         threadPool.awaitTermination(100000, TimeUnit.SECONDS);
-        System.out.printf("All queries finished! %d\n", System.currentTimeMillis() - startTime);
     }
 }
