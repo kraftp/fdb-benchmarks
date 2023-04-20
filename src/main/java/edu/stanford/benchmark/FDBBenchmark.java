@@ -2,6 +2,7 @@ package edu.stanford.benchmark;
 
 import com.apple.foundationdb.Database;
 import com.apple.foundationdb.FDB;
+import com.apple.foundationdb.Range;
 import org.apache.commons.cli.*;
 import org.voltdb.client.Client;
 import org.voltdb.client.ClientFactory;
@@ -15,7 +16,6 @@ import java.util.stream.Collectors;
 
 public class FDBBenchmark {
 
-    public static final int numKeys = 1000000;
     public static final int chunkSize = 100000;
     private static final int threadPoolSize = 256;
 
@@ -28,6 +28,7 @@ public class FDBBenchmark {
         options.addOption("i", true, "Benchmark Interval (μs)");
         options.addOption("d", true, "Benchmark duration (s)");
         options.addOption("c", true, "Connection");
+        options.addOption("k", true, "Number of Keys");
         options.addOption("r", true, "Read Percentage");
         options.addOption("o", true, "Number of ops/transaction");
 
@@ -62,20 +63,32 @@ public class FDBBenchmark {
             readPercentage = Integer.parseInt(cmd.getOptionValue("r"));
         }
 
+        int numKeys = chunkSize;
+        if (cmd.hasOption("k")) {
+            numKeys = Integer.parseInt(cmd.getOptionValue("k"));
+            assert(numKeys >= chunkSize && numKeys % chunkSize == 0);
+        }
+
         if (benchmark.equals("fdb-init")) {
-            initFDB();
+            initFDB(numKeys);
         } else if (benchmark.equals("fdb")) {
-            benchmarkFDB(interval, duration, numOps, readPercentage);
+            benchmarkFDB(interval, duration, numOps, readPercentage, numKeys);
         } else if (benchmark.equals("volt")) {
-            benchmarkVolt(interval, duration, numOps, connection, readPercentage);
+            benchmarkVolt(interval, duration, numOps, connection, readPercentage, numKeys);
         } else {
             System.out.printf("Invalid benchmark: %s", benchmark);
         }
     }
 
-    public static void initFDB() {
+    public static void initFDB(int numKeys) {
         FDB fdb = FDB.selectAPIVersion(710);
         Database db = fdb.open();
+        // Delete all keys
+        db.run(tr -> {
+            // Select all keys in the cluster
+            tr.clear(new Range(new byte[]{}, new byte[]{(byte) 0xFF}));
+            return null;
+        });
         // Set keys
         int numChunks = numKeys / chunkSize;
         for (int chunkNum = 0; chunkNum < numChunks; chunkNum++) {
@@ -89,7 +102,7 @@ public class FDBBenchmark {
         }
     }
 
-    public static void benchmarkFDB(long interval, long duration, int numOps, int readPercentage) throws InterruptedException {
+    public static void benchmarkFDB(long interval, long duration, int numOps, int readPercentage, int numKeys) throws InterruptedException {
         FDB fdb = FDB.selectAPIVersion(710);
         Database db = fdb.open();
 
@@ -163,7 +176,7 @@ public class FDBBenchmark {
         threadPool.awaitTermination(100000, TimeUnit.SECONDS);
     }
 
-    public static void benchmarkVolt(long interval, long duration, int numOps, String connection, int readPercentage) throws InterruptedException, IOException, ProcCallException {
+    public static void benchmarkVolt(long interval, long duration, int numOps, String connection, int readPercentage, int numKeys) throws InterruptedException, IOException, ProcCallException {
         Client client = ClientFactory.createClient();
         client.createConnection(connection);
         // Set keys
