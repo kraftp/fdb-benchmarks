@@ -100,7 +100,7 @@ public class FDBBenchmark {
                 }
                 return null;
             });
-            System.out.printf("Wrote %d Keys", numChunks * chunkNum);
+            System.out.printf("Wrote %d Keys\n", chunkSize * chunkNum);
         }
     }
 
