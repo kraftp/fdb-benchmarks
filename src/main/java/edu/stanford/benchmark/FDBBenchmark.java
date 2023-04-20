@@ -89,6 +89,7 @@ public class FDBBenchmark {
             tr.clear(new Range(new byte[]{}, new byte[]{(byte) 0xFF}));
             return null;
         });
+        System.out.println("Delete Finished");
         // Set keys
         int numChunks = numKeys / chunkSize;
         for (int chunkNum = 0; chunkNum < numChunks; chunkNum++) {
@@ -99,6 +100,7 @@ public class FDBBenchmark {
                 }
                 return null;
             });
+            System.out.printf("Wrote %d Keys", numChunks * chunkNum);
         }
     }
 
