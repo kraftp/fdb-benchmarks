@@ -42,7 +42,7 @@ public class FDBBenchmark {
         if (cmd.hasOption("d")) {
             duration = Integer.parseInt(cmd.getOptionValue("d"));
         }
-        int numOps = 10;
+        int numOps = 1;
         if (cmd.hasOption("o")) {
             numOps = Integer.parseInt(cmd.getOptionValue("o"));
         }
@@ -62,7 +62,9 @@ public class FDBBenchmark {
             readPercentage = Integer.parseInt(cmd.getOptionValue("r"));
         }
 
-        if (benchmark.equals("fdb")) {
+        if (benchmark.equals("fdb-init")) {
+            initFDB();
+        } else if (benchmark.equals("fdb")) {
             benchmarkFDB(interval, duration, numOps, readPercentage);
         } else if (benchmark.equals("volt")) {
             benchmarkVolt(interval, duration, numOps, connection, readPercentage);
@@ -71,7 +73,7 @@ public class FDBBenchmark {
         }
     }
 
-    public static void benchmarkFDB(long interval, long duration, int numOps, int readPercentage) throws InterruptedException {
+    public static void initFDB() {
         FDB fdb = FDB.selectAPIVersion(710);
         Database db = fdb.open();
         // Set keys
@@ -85,6 +87,11 @@ public class FDBBenchmark {
                 return null;
             });
         }
+    }
+
+    public static void benchmarkFDB(long interval, long duration, int numOps, int readPercentage) throws InterruptedException {
+        FDB fdb = FDB.selectAPIVersion(710);
+        Database db = fdb.open();
 
         // Measure read performance
         ExecutorService threadPool = Executors.newFixedThreadPool(threadPoolSize);

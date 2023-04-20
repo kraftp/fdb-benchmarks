@@ -38,6 +38,8 @@ fi
 # Define the command you want to run
 cmd=(java -jar target/fdb-benchmarks-1.0-SNAPSHOT-jar-with-dependencies.jar -b fdb -d "${DURATION}" -i "${INTERVAL}" -r "${READ_PERCENTAGE}" -o "${OPS}")
 
+# Init FDB
+java -jar target/fdb-benchmarks-1.0-SNAPSHOT-jar-with-dependencies.jar -b fdb-init
 # Run the command multiple times in separate processes and concatenate outputs
 for i in $(seq "${NUM_CLIENTS}"); do
   ( "${cmd[@]}" ) &
