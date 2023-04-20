@@ -1,17 +1,19 @@
 provider "google" {
   project = "dbos-2b63"
-  region =  "us-central1"
-  zone  = "us-central1-c"
+  region  = "us-central1"
+  zone    = "us-central1-c"
 }
 
-resource "google_compute_instance_template" "foundationdb" {
-  name_prefix = "foundationdb-node-"
+resource "google_compute_instance" "foundationdb" {
+  count        = 4
+  name         = "fdb-${count.index + 1}"
   machine_type = "n1-standard-2"
 
-  disk {
-    source_image = "projects/ubuntu-os-cloud/global/images/family/ubuntu-2004-lts"
-    auto_delete  = true
-    boot         = true
+  boot_disk {
+    initialize_params {
+      image = "projects/ubuntu-os-cloud/global/images/family/ubuntu-2004-lts"
+    }
+    auto_delete = true
   }
 
   network_interface {
@@ -20,7 +22,7 @@ resource "google_compute_instance_template" "foundationdb" {
 
   metadata_startup_script = <<-EOT
     #!/bin/bash
-    exec > >(tee /var/log/foundationdb-startup.log) 2>&1
+    exec > >(tee /foundationdb-startup.log) 2>&1
 
     set -x
     # Update packages and install FoundationDB
@@ -36,16 +38,6 @@ resource "google_compute_instance_template" "foundationdb" {
   EOT
 
   tags = ["foundationdb-node"]
-}
-
-resource "google_compute_instance_group_manager" "foundationdb" {
-  name = "foundationdb-cluster"
-
-  base_instance_name = "foundationdb-node"
-  version {
-    instance_template = google_compute_instance_template.foundationdb.self_link
-  }
-  target_size = 4
 }
 
 
@@ -77,6 +69,13 @@ resource "google_compute_firewall" "allow-ssh" {
   target_tags   = ["foundationdb-node"]
 }
 
-output "instance_group_manager" {
-  value = google_compute_instance_group_manager.foundationdb.name
+output "instances" {
+  value = [
+    for instance in google_compute_instance.foundationdb :
+    {
+      name              = instance.name
+      zone              = instance.zone
+      network_interface = instance.network_interface[0].network_ip
+    }
+  ]
 }
