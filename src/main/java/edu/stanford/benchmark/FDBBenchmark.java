@@ -15,7 +15,8 @@ import java.util.stream.Collectors;
 
 public class FDBBenchmark {
 
-    public static final int numKeys = 100000;
+    public static final int numKeys = 1000000;
+    public static final int chunkSize = 100000;
     private static final int threadPoolSize = 256;
 
     private static final Collection<Long> readTimes = new ConcurrentLinkedQueue<>();
@@ -74,12 +75,16 @@ public class FDBBenchmark {
         FDB fdb = FDB.selectAPIVersion(710);
         Database db = fdb.open();
         // Set keys
-        db.run(tr -> {
-            for (int key = 0; key < numKeys; key++) {
-                tr.set(Utilities.toByteArray(key), Utilities.toByteArray(key));
-            }
-            return null;
-        });
+        int numChunks = numKeys / chunkSize;
+        for (int chunkNum = 0; chunkNum < numChunks; chunkNum++) {
+            int startKey = chunkNum * chunkSize;
+            db.run(tr -> {
+                for (int key = startKey; key < startKey + chunkSize; key++) {
+                    tr.set(Utilities.toByteArray(key), Utilities.toByteArray(key));
+                }
+                return null;
+            });
+        }
 
         // Measure read performance
         ExecutorService threadPool = Executors.newFixedThreadPool(threadPoolSize);
