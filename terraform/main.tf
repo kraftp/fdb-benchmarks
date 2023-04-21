@@ -7,7 +7,7 @@ provider "google" {
 resource "google_compute_instance" "foundationdb" {
   count        = 4
   name         = "fdb-${count.index + 1}"
-  machine_type = "n1-standard-1"
+  machine_type = "n1-standard-4"
 
   boot_disk {
     initialize_params {
