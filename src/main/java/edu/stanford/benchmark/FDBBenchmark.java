@@ -2,6 +2,7 @@ package edu.stanford.benchmark;
 
 import com.apple.foundationdb.Database;
 import com.apple.foundationdb.FDB;
+import com.apple.foundationdb.Range;
 import org.apache.commons.cli.*;
 import org.voltdb.client.Client;
 import org.voltdb.client.ClientFactory;
@@ -15,7 +16,7 @@ import java.util.stream.Collectors;
 
 public class FDBBenchmark {
 
-    public static final int numKeys = 100000;
+    public static final int chunkSize = 100000;
     private static final int threadPoolSize = 256;
 
     private static final Collection<Long> readTimes = new ConcurrentLinkedQueue<>();
@@ -27,6 +28,7 @@ public class FDBBenchmark {
         options.addOption("i", true, "Benchmark Interval (μs)");
         options.addOption("d", true, "Benchmark duration (s)");
         options.addOption("c", true, "Connection");
+        options.addOption("k", true, "Number of Keys");
         options.addOption("r", true, "Read Percentage");
         options.addOption("o", true, "Number of ops/transaction");
 
@@ -41,7 +43,7 @@ public class FDBBenchmark {
         if (cmd.hasOption("d")) {
             duration = Integer.parseInt(cmd.getOptionValue("d"));
         }
-        int numOps = 10;
+        int numOps = 1;
         if (cmd.hasOption("o")) {
             numOps = Integer.parseInt(cmd.getOptionValue("o"));
         }
@@ -61,25 +63,50 @@ public class FDBBenchmark {
             readPercentage = Integer.parseInt(cmd.getOptionValue("r"));
         }
 
-        if (benchmark.equals("fdb")) {
-            benchmarkFDB(interval, duration, numOps, readPercentage);
+        int numKeys = chunkSize;
+        if (cmd.hasOption("k")) {
+            numKeys = Integer.parseInt(cmd.getOptionValue("k"));
+            assert(numKeys >= chunkSize && numKeys % chunkSize == 0);
+        }
+
+        if (benchmark.equals("fdb-init")) {
+            initFDB(numKeys);
+        } else if (benchmark.equals("fdb")) {
+            benchmarkFDB(interval, duration, numOps, readPercentage, numKeys);
         } else if (benchmark.equals("volt")) {
-            benchmarkVolt(interval, duration, numOps, connection, readPercentage);
+            benchmarkVolt(interval, duration, numOps, connection, readPercentage, numKeys);
         } else {
             System.out.printf("Invalid benchmark: %s", benchmark);
         }
     }
 
-    public static void benchmarkFDB(long interval, long duration, int numOps, int readPercentage) throws InterruptedException {
+    public static void initFDB(int numKeys) {
         FDB fdb = FDB.selectAPIVersion(710);
         Database db = fdb.open();
-        // Set keys
+        // Delete all keys
         db.run(tr -> {
-            for (int key = 0; key < numKeys; key++) {
-                tr.set(Utilities.toByteArray(key), Utilities.toByteArray(key));
-            }
+            // Select all keys in the cluster
+            tr.clear(new Range(new byte[]{}, new byte[]{(byte) 0xFF}));
             return null;
         });
+        System.out.println("Delete Finished");
+        // Set keys
+        int numChunks = numKeys / chunkSize;
+        for (int chunkNum = 0; chunkNum < numChunks; chunkNum++) {
+            int startKey = chunkNum * chunkSize;
+            db.run(tr -> {
+                for (int key = startKey; key < startKey + chunkSize; key++) {
+                    tr.set(Utilities.toByteArray(key), Utilities.toByteArray(key));
+                }
+                return null;
+            });
+            System.out.printf("Wrote %d Keys\n", chunkSize * (chunkNum + 1));
+        }
+    }
+
+    public static void benchmarkFDB(long interval, long duration, int numOps, int readPercentage, int numKeys) throws InterruptedException {
+        FDB fdb = FDB.selectAPIVersion(710);
+        Database db = fdb.open();
 
         // Measure read performance
         ExecutorService threadPool = Executors.newFixedThreadPool(threadPoolSize);
@@ -151,7 +178,7 @@ public class FDBBenchmark {
         threadPool.awaitTermination(100000, TimeUnit.SECONDS);
     }
 
-    public static void benchmarkVolt(long interval, long duration, int numOps, String connection, int readPercentage) throws InterruptedException, IOException, ProcCallException {
+    public static void benchmarkVolt(long interval, long duration, int numOps, String connection, int readPercentage, int numKeys) throws InterruptedException, IOException, ProcCallException {
         Client client = ClientFactory.createClient();
         client.createConnection(connection);
         // Set keys
