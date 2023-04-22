@@ -26,32 +26,25 @@ Set the VOLT_HOME environment variable to Volt's root directory and add VoltDB b
 
     scripts/initialize_voltdb.sh
 
-## Benchmarks
+## FoundationDB Benchmark
 
-To compile the benchmark JAR:
-
-    mvn clean compile assembly:single
-
-To run the benchmark:
-
-    java -jar target/fdb-benchmarks-1.0-SNAPSHOT-jar-with-dependencies.jar -b SYSTEM -c ADDRESS -d DURATION -i INTERVAL -r READ_PERCENTAGE -o OPS
-
-SYSTEM is VoltDB (volt) or FoundationDB (fdb).
-
-ADDRESS is the address of the VoltDB server (not needed for FDB).
-
-DURATION is the runtime of the benchmark.
-
-INTERVAL is the length of time to wait between submitting queries (in microseconds, so an interval of 1000 submits 1K TPS).
-
-READ_PERCENTAGE is the percentage of transactions that are read-only.
-
-OPS is the number of operations (single-key reads or writes) to do per transaction.
-
-Both VoltDB and FoundationDB clients are backed by a single network thread, so we found that fully saturating a single-core VoltDB or FDB database requires many (we used 8) concurrent client processes.
-
-To run many FDB clients in parallel, use:
+Deploy the cluster:
 
 ```shell
-scripts/run_parallel.sh -d DURATION -i INTERVAL -r READ_PERCENTAGE -o OPS -n NUM_CLIENTS
+cd terraform
+terraform init
+terraform apply
+./copy_fdb_cluster.sh NUM_MACHINES
+```
+
+First, initialize the data:
+
+```shell
+java -jar target/fdb-benchmarks-1.0-SNAPSHOT-jar-with-dependencies.jar -b fdb-init -k NUM_KEYS
+```
+
+Then, to run many FDB clients in parallel, use:
+
+```shell
+scripts/run_parallel.sh -d DURATION -i INTERVAL -r READ_PERCENTAGE -o OPS -k NUM_KEYS -n NUM_CLIENTS
 ```
