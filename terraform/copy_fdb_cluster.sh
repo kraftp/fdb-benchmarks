@@ -18,6 +18,14 @@ num_nodes="$1"
 
 gcloud compute scp ${coordinator_instance_name}:/etc/foundationdb/fdb.cluster fdb.cluster --zone $zone
 
+# Iterate through the instances and copy the foundationdb.conf file to each instance
+for ((i=1; i<=$num_nodes; i++)); do
+  instance_name="${instance_prefix}${i}"
+  echo "Copying foundationdb.conf to $instance_name"
+  gcloud compute scp foundationdb.conf ${instance_name}:/tmp/foundationdb.conf --zone $zone
+  echo "Moving foundationdb.conf to the correct location on $instance_name"
+  gcloud compute ssh ${instance_name} --zone $zone --command "sudo mv /tmp/foundationdb.conf /etc/foundationdb/foundationdb.conf"
+done
 # Iterate through the instances and copy the fdb.cluster file to each instance
 for ((i=2; i<=$num_nodes; i++)); do
   instance_name="${instance_prefix}${i}"

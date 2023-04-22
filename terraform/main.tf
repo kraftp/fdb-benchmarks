@@ -12,6 +12,8 @@ resource "google_compute_instance" "foundationdb" {
   boot_disk {
     initialize_params {
       image = "projects/ubuntu-os-cloud/global/images/family/ubuntu-2004-lts"
+      size = 20
+      type = "pd-ssd"
     }
     auto_delete = true
   }
